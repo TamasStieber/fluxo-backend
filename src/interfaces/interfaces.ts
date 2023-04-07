@@ -11,12 +11,17 @@ export interface User {
   lastName: string;
   email: string;
   password: string;
+  photos: Photo[];
   createdAt: Date;
   profilePictureUrl: string;
   acquaintances: mongoose.Types.ObjectId[] | User[];
   posts: mongoose.Types.ObjectId[] | Post[];
   likedPosts: mongoose.Types.ObjectId[] | Post[];
   messages: mongoose.Types.ObjectId[] | Message[];
+}
+
+export interface Photo {
+  url: string;
 }
 
 export interface Post {

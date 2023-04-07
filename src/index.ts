@@ -14,6 +14,7 @@ const server = express();
 server.use(cors());
 server.use(morgan('tiny'));
 server.use(express.json());
+server.use(express.static('users'));
 server.use('/register', registerRouter);
 server.use('/login', loginRouter);
 server.use('/users', authorization, usersRouter);

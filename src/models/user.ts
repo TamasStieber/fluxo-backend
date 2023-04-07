@@ -21,6 +21,13 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
       type: String,
       required: true,
     },
+    profilePictureUrl: {
+      type: String,
+      default: '',
+    },
+    photos: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Photo', default: [] },
+    ],
     createdAt: {
       type: Date,
       default: new Date(),
