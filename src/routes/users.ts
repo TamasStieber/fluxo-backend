@@ -79,7 +79,9 @@ router.put('/:id', upload.single('profilePicture'), async (req, res, next) => {
   if (fileName) updatedUser.profilePictureUrl = fileName;
 
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, updatedUser);
+    const user = await User.findByIdAndUpdate(req.params.id, updatedUser, {
+      new: true,
+    });
     const userDir = usersDir + `/${req.params.id}`;
     if (fileName) {
       fs.unlinkSync(userDir + '/photos/' + previousUser?.profilePictureUrl);
@@ -110,6 +112,7 @@ router.put('/:id/password', async (req, res, next) => {
     const user = await User.findByIdAndUpdate(req.params.id, {
       password: newPassword,
     });
+
     res.status(200).json(user);
   } catch {
     next(res.status(500).json({ error: 'Internal server error' }));
