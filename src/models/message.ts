@@ -19,7 +19,6 @@ export const messageSchema: mongoose.Schema<Message> = new mongoose.Schema(
     },
     createdAt: {
       type: Date,
-      default: new Date(),
     },
   },
   { timestamps: true }

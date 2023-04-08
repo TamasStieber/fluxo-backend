@@ -30,7 +30,6 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
     ],
     createdAt: {
       type: Date,
-      default: new Date(),
     },
     acquaintances: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] },

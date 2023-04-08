@@ -14,7 +14,6 @@ const postSchema: mongoose.Schema<Post> = new mongoose.Schema(
     },
     createdAt: {
       type: Date,
-      default: new Date(),
     },
     comments: [
       {
