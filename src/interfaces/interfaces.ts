@@ -15,8 +15,10 @@ export interface User {
   createdAt: Date;
   profilePictureUrl: string;
   acquaintances: mongoose.Types.ObjectId[] | User[];
-  posts: mongoose.Types.ObjectId[] | Post[];
-  likedPosts: mongoose.Types.ObjectId[] | Post[];
+  // posts: mongoose.Types.ObjectId[] | Post[];
+  posts: mongoose.Types.Array<mongoose.Types.ObjectId>;
+  // likedPosts: mongoose.Types.ObjectId[] | Post[];
+  likedPosts: mongoose.Types.Array<mongoose.Types.ObjectId>;
   messages: mongoose.Types.ObjectId[] | Message[];
 }
 
@@ -29,6 +31,7 @@ export interface Post {
   content: string;
   author: mongoose.Types.ObjectId;
   createdAt: Date;
+  contentUpdated: Date;
   comments: mongoose.Types.ObjectId[];
   likes: mongoose.Types.ObjectId[];
 }

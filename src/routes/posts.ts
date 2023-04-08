@@ -37,6 +37,20 @@ router.post('/', async (req, res, next) => {
   }
 });
 
+router.put('/:id', async (req, res) => {
+  const update = req.body as Post;
+  update.contentUpdated = new Date();
+
+  try {
+    const updatedPost = await Post.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+    });
+    res.status(200).json({ updatedPost });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.put('/:id/add-like', async (req, res, next) => {
   const userId = req.body.id;
 
@@ -82,6 +96,31 @@ router.put('/:id/remove-like', async (req, res, next) => {
       });
   } catch {
     next(res.status(500).json({ error: 'Internal server error' }));
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const users = await User.find({ likedPosts: req.params.id });
+
+    if (users) {
+      for (const user of users) {
+        user.likedPosts.pull(req.params.id);
+        await user.save();
+      }
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+
+  try {
+    const postToDelete = await Post.findByIdAndDelete(req.params.id);
+    const author = await User.findById(postToDelete?.author);
+    author?.posts.pull(req.params.id);
+    author?.save();
+    res.status(200).json({ postToDelete });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -15,6 +15,9 @@ const postSchema: mongoose.Schema<Post> = new mongoose.Schema(
     createdAt: {
       type: Date,
     },
+    contentUpdated: {
+      type: Date,
+    },
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
