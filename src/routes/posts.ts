@@ -8,7 +8,7 @@ const router = Router();
 router.get('/', async (req, res, next) => {
   try {
     Post.find()
-      .sort({ _id: -1 })
+      .sort({ createdAt: -1 })
       .populate('author likes')
       .exec()
       .then((allPosts) => {
