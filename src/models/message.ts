@@ -17,6 +17,10 @@ export const messageSchema: mongoose.Schema<Message> = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
     createdAt: {
       type: Date,
     },

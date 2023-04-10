@@ -14,6 +14,7 @@ export interface User {
   photos: Photo[];
   createdAt: Date;
   profilePictureUrl: string;
+  lastReadMessages: LastReadMessage[];
   acquaintances: mongoose.Types.ObjectId[] | User[];
   // posts: mongoose.Types.ObjectId[] | Post[];
   posts: mongoose.Types.Array<mongoose.Types.ObjectId>;
@@ -38,8 +39,20 @@ export interface Post {
 
 export interface Message {
   _id: mongoose.Types.ObjectId;
-  sender: mongoose.Types.ObjectId | User;
-  receiver: mongoose.Types.ObjectId | User;
+  sender: mongoose.Types.ObjectId;
+  receiver: mongoose.Types.ObjectId;
   content: string;
+  isRead: boolean;
   createdAt: Date;
+}
+
+export interface Conversation {
+  participants: mongoose.Types.ObjectId[];
+  messages: mongoose.Types.ObjectId[];
+  lastMessage: Message;
+}
+
+export interface LastReadMessage {
+  conversation: mongoose.Types.ObjectId;
+  lastReadMessage: mongoose.Types.ObjectId;
 }

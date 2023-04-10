@@ -25,6 +25,12 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
       type: String,
       default: '',
     },
+    lastReadMessages: [
+      {
+        conversation: { type: mongoose.Schema.Types.ObjectId },
+        lastReadMessage: { type: mongoose.Schema.Types.ObjectId },
+      },
+    ],
     photos: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Photo', default: [] },
     ],
