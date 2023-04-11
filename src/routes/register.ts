@@ -6,7 +6,7 @@ import fs from 'fs';
 import multer from 'multer';
 
 const router = Router();
-const usersDir = './users';
+const photosDir = './photos';
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -26,7 +26,6 @@ router.post('/', upload.single('profilePicture'), async (req, res, next) => {
   const newUser = JSON.parse(req.body.data) as Interfaces.User;
 
   const fileName = req.file?.filename;
-  newUser.profilePictureUrl = fileName ? fileName : '';
 
   try {
     const existingUser = await User.find({ email: newUser.email });
@@ -41,15 +40,21 @@ router.post('/', upload.single('profilePicture'), async (req, res, next) => {
 
   newUser.password = await bcrypt.hash(newUser.password, 10);
 
+  const stringFromRandom = Math.random().toString(16).substring(2, 8);
+  const stringFromCurrentDate = Date.now().toString(16).substring(5);
+  const photosFolder = stringFromCurrentDate + stringFromRandom;
+
+  newUser.photosFolder = photosFolder;
+  newUser.profilePictureUrl = fileName ? fileName : '';
+
   try {
     const user = await User.create(newUser);
-    const userDir = usersDir + `/${user._id}`;
-    if (!fs.existsSync(userDir)) {
-      fs.mkdirSync(userDir);
-      fs.mkdirSync(userDir + '/photos');
+    const userPhotosDir = photosDir + `/${photosFolder}`;
+    if (!fs.existsSync(userPhotosDir)) {
+      fs.mkdirSync(userPhotosDir);
     }
     fileName &&
-      fs.renameSync('./temp/' + fileName, userDir + '/photos/' + fileName);
+      fs.renameSync('./temp/' + fileName, userPhotosDir + '/' + fileName);
     res.status(201).json(user);
   } catch {
     next(res.status(500).json({ error: 'Internal server error' }));

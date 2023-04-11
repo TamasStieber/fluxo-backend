@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import mongoose from 'mongoose';
 
 export interface LoginData {
@@ -11,6 +12,7 @@ export interface User {
   lastName: string;
   email: string;
   password: string;
+  photosFolder: string;
   photos: Photo[];
   createdAt: Date;
   profilePictureUrl: string;

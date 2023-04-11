@@ -16,13 +16,13 @@ const server = express();
 server.use(cors());
 server.use(morgan('tiny'));
 server.use(express.json());
-server.use(express.static('users'));
+server.use(express.static('photos'));
 server.use('/register', registerRouter);
 server.use('/login', loginRouter);
 server.use('/users', authorization, usersRouter);
 server.use('/posts', authorization, postsRouter);
 server.use('/search', authorization, searchRouter);
-server.use('/messages', messagesRouter);
+server.use('/messages', authorization, messagesRouter);
 
 server.use((req, res) => {
   res.status(404).json({ error: 'Not found' }).end();

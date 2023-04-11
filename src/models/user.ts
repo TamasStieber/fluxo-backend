@@ -21,6 +21,10 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
       type: String,
       required: true,
     },
+    photosFolder: {
+      type: String,
+      default: '',
+    },
     profilePictureUrl: {
       type: String,
       default: '',

@@ -8,7 +8,7 @@ import * as Interfaces from '../interfaces/interfaces';
 
 const router = Router();
 
-const usersDir = './users';
+const photosDir = './photos';
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -28,6 +28,17 @@ router.get('/', async (req, res, next) => {
   try {
     const allUsers = await User.find({});
     res.status(200).json({ allUsers });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/current', async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId).select(
+      '-_id -password'
+    );
+    res.status(200).json({ currentUser });
   } catch {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -71,21 +82,21 @@ router.get('/:id/posts', async (req, res, next) => {
   }
 });
 
-router.put('/:id', upload.single('profilePicture'), async (req, res, next) => {
+router.put('/', upload.single('profilePicture'), async (req, res, next) => {
   const updatedUser = JSON.parse(req.body.data) as Interfaces.User;
-  const previousUser = await User.findById(req.params.id);
+  const previousUser = await User.findById(req.userId);
 
   const fileName = req.file?.filename;
   if (fileName) updatedUser.profilePictureUrl = fileName;
 
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, updatedUser, {
+    const user = await User.findByIdAndUpdate(req.userId, updatedUser, {
       new: true,
     });
-    const userDir = usersDir + `/${req.params.id}`;
+    const userPhotosDir = photosDir + `/${previousUser?.photosFolder}`;
     if (fileName) {
-      fs.unlinkSync(userDir + '/photos/' + previousUser?.profilePictureUrl);
-      fs.renameSync('./temp/' + fileName, userDir + '/photos/' + fileName);
+      fs.unlinkSync(userPhotosDir + '/' + previousUser?.profilePictureUrl);
+      fs.renameSync('./temp/' + fileName, userPhotosDir + '/' + fileName);
     }
     res.status(200).json(user);
   } catch {
@@ -93,9 +104,9 @@ router.put('/:id', upload.single('profilePicture'), async (req, res, next) => {
   }
 });
 
-router.put('/:id/password', async (req, res, next) => {
+router.put('/password', async (req, res, next) => {
   const passwords = req.body;
-  const previousUser = await User.findById(req.params.id);
+  const previousUser = await User.findById(req.userId);
 
   if (!previousUser) return res.status(404).json({ error: 'User not found' });
 
@@ -109,7 +120,7 @@ router.put('/:id/password', async (req, res, next) => {
   const newPassword = await bcrypt.hash(passwords.newPassword, 10);
 
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, {
+    const user = await User.findByIdAndUpdate(req.userId, {
       password: newPassword,
     });
 

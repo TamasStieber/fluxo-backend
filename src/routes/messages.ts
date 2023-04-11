@@ -60,9 +60,9 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.get('/user/:userId', async (req, res) => {
+router.get('/user/', async (req, res) => {
   try {
-    await Conversation.find({ participants: req.params.userId })
+    await Conversation.find({ participants: req.userId })
       .sort({ updatedAt: -1 })
       .populate('participants')
       .exec()
