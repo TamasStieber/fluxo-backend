@@ -5,6 +5,8 @@ import multer from 'multer';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import * as Interfaces from '../interfaces/interfaces';
+import { removeDiacritics } from '../utils/utils';
+import _ from 'lodash';
 
 const router = Router();
 
@@ -35,29 +37,20 @@ router.get('/', async (req, res, next) => {
 
 router.get('/current', async (req, res) => {
   try {
-    const currentUser = await User.findById(req.userId).select(
-      '-_id -password'
-    );
+    const currentUser = await User.findById(req.userId).select('-password');
     res.status(200).json({ currentUser });
   } catch {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:username', async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ userName: req.params.username }).select(
+      'firstName lastName userName email photosFolder profilePictureUrl createdAt'
+    );
     if (!user) return res.status(404).json({ error: 'User not found' });
-    // res.status(200).json({ user });
-    await User.findById(req.params.id)
-      .populate('posts')
-      .exec()
-      .then((user) => {
-        res.status(200).json({ user });
-      })
-      .catch(() => {
-        next(res.status(500).json({ error: 'Internal server error' }));
-      });
+    res.status(200).json({ user });
   } catch {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -65,11 +58,13 @@ router.get('/:id', async (req, res, next) => {
 
 router.get('/:id/posts', async (req, res, next) => {
   try {
-    // const user = await User.findById(req.params.id);
-    // res.status(200).json({ user });
     await Post.find({ author: req.params.id })
       .sort({ _id: -1 })
-      .populate('author likes')
+      .populate({
+        path: 'author likes',
+        select:
+          'firstName lastName userName email photosFolder profilePictureUrl',
+      })
       .exec()
       .then((posts) => {
         res.status(200).json({ posts });
@@ -86,6 +81,20 @@ router.put('/', upload.single('profilePicture'), async (req, res, next) => {
   const updatedUser = JSON.parse(req.body.data) as Interfaces.User;
   const previousUser = await User.findById(req.userId);
 
+  updatedUser.firstName = _.capitalize(updatedUser.firstName);
+  updatedUser.lastName = _.capitalize(updatedUser.lastName);
+  updatedUser.fullName = updatedUser.firstName + ' ' + updatedUser.lastName;
+  updatedUser.userName = _.toLower(removeDiacritics(updatedUser.userName));
+
+  // const userWithSameName = await User.find({ fullName: updatedUser.fullName });
+  // const count =
+  //   userWithSameName.length > 0 ? userWithSameName.length.toString() : '';
+  // updatedUser.userName =
+  //   _.toLower(removeDiacritics(updatedUser.firstName)) +
+  //   count +
+  //   '.' +
+  //   _.toLower(removeDiacritics(updatedUser.lastName));
+
   const fileName = req.file?.filename;
   if (fileName) updatedUser.profilePictureUrl = fileName;
 
@@ -95,7 +104,13 @@ router.put('/', upload.single('profilePicture'), async (req, res, next) => {
     });
     const userPhotosDir = photosDir + `/${previousUser?.photosFolder}`;
     if (fileName) {
-      fs.unlinkSync(userPhotosDir + '/' + previousUser?.profilePictureUrl);
+      const previousProfilePicture =
+        userPhotosDir + '/' + previousUser?.profilePictureUrl;
+      if (
+        previousUser?.profilePictureUrl &&
+        fs.existsSync(previousProfilePicture)
+      )
+        fs.unlinkSync(previousProfilePicture);
       fs.renameSync('./temp/' + fileName, userPhotosDir + '/' + fileName);
     }
     res.status(200).json(user);

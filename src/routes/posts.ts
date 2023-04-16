@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as Interfaces from '../interfaces/interfaces';
 import Post from '../models/post';
 import User from '../models/user';
+import mongoose from 'mongoose';
 
 const router = Router();
 
@@ -11,8 +12,8 @@ router.get('/', async (req, res, next) => {
       .sort({ createdAt: -1 })
       .populate('author likes')
       .exec()
-      .then((allPosts) => {
-        res.status(200).json(allPosts);
+      .then((posts) => {
+        res.status(200).json({ posts });
       })
       .catch(() => {
         next(res.status(500).json({ error: 'Internal server error' }));
@@ -27,11 +28,11 @@ router.post('/', async (req, res, next) => {
 
   try {
     const post = await Post.create(newPost);
-    await User.findByIdAndUpdate(newPost.author, {
+    await User.findByIdAndUpdate(req.userId, {
       $push: { posts: post._id },
     });
 
-    res.status(201).json(post);
+    res.status(201).json({ post });
   } catch {
     next(res.status(500).json({ error: 'Internal server error' }));
   }
@@ -52,13 +53,13 @@ router.put('/:id', async (req, res) => {
 });
 
 router.put('/:id/add-like', async (req, res, next) => {
-  const userId = req.body.id;
+  console.log(req.userId);
 
   try {
     await Post.findByIdAndUpdate(req.params.id, {
-      $push: { likes: userId },
+      $push: { likes: req.userId },
     });
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(req.userId, {
       $push: { likedPosts: req.params.id },
     });
     await Post.findById(req.params.id)
@@ -76,13 +77,11 @@ router.put('/:id/add-like', async (req, res, next) => {
 });
 
 router.put('/:id/remove-like', async (req, res, next) => {
-  const userId = req.body.id;
-
   try {
     await Post.findByIdAndUpdate(req.params.id, {
-      $pull: { likes: userId },
+      $pull: { likes: req.userId },
     });
-    await User.findByIdAndUpdate(userId, {
+    await User.findByIdAndUpdate(req.userId, {
       $pull: { likedPosts: req.params.id },
     });
     await Post.findById(req.params.id)

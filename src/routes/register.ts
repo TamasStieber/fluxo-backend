@@ -4,6 +4,10 @@ import User from '../models/user';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 import multer from 'multer';
+import _ from 'lodash';
+import { removeDiacritics, welcomeMessageContent } from '../utils/utils';
+import Conversation from '../models/conversation';
+import Message from '../models/message';
 
 const router = Router();
 const photosDir = './photos';
@@ -31,12 +35,29 @@ router.post('/', upload.single('profilePicture'), async (req, res, next) => {
     const existingUser = await User.find({ email: newUser.email });
     if (existingUser.length > 0) {
       fileName && fs.unlinkSync('./temp/' + fileName);
-      return next(res.status(400).json({ error: 'User already exists' }));
+      return next(
+        res
+          .status(400)
+          .json({ error: 'This email address is already registered' })
+      );
     }
   } catch {
     fileName && fs.unlinkSync('./temp/' + fileName);
     return next(res.status(500).json({ error: 'Internal server error' }));
   }
+
+  newUser.firstName = _.capitalize(newUser.firstName);
+  newUser.lastName = _.capitalize(newUser.lastName);
+  newUser.fullName = newUser.firstName + ' ' + newUser.lastName;
+
+  const userWithSameName = await User.find({ fullName: newUser.fullName });
+  const count =
+    userWithSameName.length > 0 ? userWithSameName.length.toString() : '';
+  newUser.userName =
+    _.toLower(removeDiacritics(newUser.firstName)) +
+    count +
+    '.' +
+    _.toLower(removeDiacritics(newUser.lastName));
 
   newUser.password = await bcrypt.hash(newUser.password, 10);
 
@@ -48,14 +69,42 @@ router.post('/', upload.single('profilePicture'), async (req, res, next) => {
   newUser.profilePictureUrl = fileName ? fileName : '';
 
   try {
-    const user = await User.create(newUser);
+    const createdUser = await User.create(newUser);
     const userPhotosDir = photosDir + `/${photosFolder}`;
     if (!fs.existsSync(userPhotosDir)) {
       fs.mkdirSync(userPhotosDir);
     }
     fileName &&
       fs.renameSync('./temp/' + fileName, userPhotosDir + '/' + fileName);
-    res.status(201).json(user);
+
+    //
+    const sender = await User.findOne({ userName: 'kalman.beka' });
+    const content = welcomeMessageContent;
+    const messageContent = {
+      sender: sender?._id,
+      receiver: createdUser._id,
+      content: content,
+    };
+    const newMessage = await Message.create(messageContent);
+    const newConversation = await Conversation.create({
+      participants: [sender, createdUser._id],
+      messages: [newMessage._id],
+      lastMessage: newMessage,
+    });
+
+    createdUser.lastReadMessages.push({
+      conversation: newConversation._id,
+      lastReadMessage: null!,
+    });
+    createdUser.save();
+    sender?.lastReadMessages.push({
+      conversation: newConversation._id,
+      lastReadMessage: newMessage._id,
+    });
+    sender?.save();
+    //
+
+    res.status(201).json(createdUser);
   } catch {
     next(res.status(500).json({ error: 'Internal server error' }));
   }

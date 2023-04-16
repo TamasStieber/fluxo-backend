@@ -8,6 +8,7 @@ import usersRouter from './routes/users';
 import postsRouter from './routes/posts';
 import searchRouter from './routes/search';
 import messagesRouter from './routes/messages';
+import friendRequestsRouter from './routes/friendRequests';
 import cors from 'cors';
 import morgan from 'morgan';
 
@@ -23,6 +24,7 @@ server.use('/users', authorization, usersRouter);
 server.use('/posts', authorization, postsRouter);
 server.use('/search', authorization, searchRouter);
 server.use('/messages', authorization, messagesRouter);
+server.use('/friend-requests', authorization, friendRequestsRouter);
 
 server.use((req, res) => {
   res.status(404).json({ error: 'Not found' }).end();

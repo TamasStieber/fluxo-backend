@@ -11,6 +11,14 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
       type: String,
       required: true,
     },
+    fullName: {
+      type: String,
+      required: true,
+    },
+    userName: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
@@ -29,6 +37,13 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
       type: String,
       default: '',
     },
+    friendRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FriendRequest',
+        default: [],
+      },
+    ],
     lastReadMessages: [
       {
         conversation: { type: mongoose.Schema.Types.ObjectId },
@@ -47,9 +62,6 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
     posts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post', default: [] }],
     likedPosts: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Post', default: [] },
-    ],
-    messages: [
-      { type: mongoose.Schema.Types.ObjectId, ref: 'Message', default: [] },
     ],
   },
   { timestamps: true }

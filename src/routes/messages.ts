@@ -37,6 +37,8 @@ router.post('/', async (req, res) => {
       lastMessage: newMessage,
     });
 
+    await newConversation.populate('participants messages');
+
     await User.findByIdAndUpdate(message.sender, {
       $push: {
         lastReadMessages: {
@@ -85,7 +87,7 @@ router.get('/:conversationId', async (req, res) => {
       .then(async (conversation) => {
         await User.findOneAndUpdate(
           {
-            _id: conversation?.lastMessage.receiver,
+            _id: req.userId,
             'lastReadMessages.conversation': conversation?._id,
           },
           {

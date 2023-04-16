@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import mongoose from 'mongoose';
+import mongoose, { Document } from 'mongoose';
 
 export interface LoginData {
   email: string;
@@ -10,19 +10,21 @@ export interface User {
   _id: mongoose.Types.ObjectId;
   firstName: string;
   lastName: string;
+  fullName: string;
+  userName: string;
   email: string;
   password: string;
   photosFolder: string;
   photos: Photo[];
   createdAt: Date;
   profilePictureUrl: string;
+  friendRequests: mongoose.Types.ObjectId[];
   lastReadMessages: LastReadMessage[];
   acquaintances: mongoose.Types.ObjectId[] | User[];
   // posts: mongoose.Types.ObjectId[] | Post[];
   posts: mongoose.Types.Array<mongoose.Types.ObjectId>;
   // likedPosts: mongoose.Types.ObjectId[] | Post[];
   likedPosts: mongoose.Types.Array<mongoose.Types.ObjectId>;
-  messages: mongoose.Types.ObjectId[] | Message[];
 }
 
 export interface Photo {
@@ -57,4 +59,12 @@ export interface Conversation {
 export interface LastReadMessage {
   conversation: mongoose.Types.ObjectId;
   lastReadMessage: mongoose.Types.ObjectId;
+}
+
+export interface FriendRequest {
+  _id: mongoose.Types.ObjectId;
+  sender: mongoose.Types.ObjectId;
+  receiver: mongoose.Types.ObjectId;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
 }
