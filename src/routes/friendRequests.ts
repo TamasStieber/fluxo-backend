@@ -18,13 +18,18 @@ router.get('/:requestId', async (req, res) => {
   }
 });
 
-router.get('/receiver/:receiverId', async (req, res) => {
+router.get('/user/current', async (req, res) => {
   try {
-    const friendRequest = await FriendRequest.findOne({
-      sender: req.userId,
-      receiver: req.params.receiverId,
-    });
-    res.status(200).json({ friendRequest });
+    const user = await User.findById(req.userId)
+      .select('friendRequests')
+      .populate({
+        path: 'friendRequests',
+        populate: {
+          path: 'sender receiver',
+          select: 'firstName lastName userName photosFolder profilePictureUrl',
+        },
+      });
+    res.status(200).json({ friendRequests: user?.friendRequests });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -38,8 +43,15 @@ router.post('/', async (req, res) => {
       status: 'pending',
     });
 
+    await User.findByIdAndUpdate(req.userId, {
+      $push: { friendRequests: friendRequest },
+    });
     await User.findByIdAndUpdate(req.body.receiver, {
       $push: { friendRequests: friendRequest },
+    });
+    await friendRequest.populate({
+      path: 'sender receiver',
+      select: 'firstName lastName userName photosFolder profilePictureUrl',
     });
     res.status(201).json({ friendRequest });
   } catch (error) {
@@ -53,6 +65,9 @@ router.delete('/:friendRequestId', async (req, res) => {
       req.params.friendRequestId
     );
 
+    await User.findByIdAndUpdate(friendRequestToDelete?.sender, {
+      $pull: { friendRequests: req.params.friendRequestId },
+    });
     await User.findByIdAndUpdate(friendRequestToDelete?.receiver, {
       $pull: { friendRequests: req.params.friendRequestId },
     });
@@ -68,7 +83,11 @@ router.post('/:friendRequestId/accept', async (req, res) => {
       req.params.friendRequestId
     );
 
-    await User.findByIdAndUpdate(req.userId, {
+    await User.findByIdAndUpdate(friendRequestToDelete?.sender, {
+      $pull: { friendRequests: req.params.friendRequestId },
+      $push: { acquaintances: friendRequestToDelete?.receiver },
+    });
+    await User.findByIdAndUpdate(friendRequestToDelete?.receiver, {
       $pull: { friendRequests: req.params.friendRequestId },
       $push: { acquaintances: friendRequestToDelete?.sender },
     });
@@ -85,6 +104,9 @@ router.post('/:friendRequestId/reject', async (req, res) => {
       req.params.friendRequestId
     );
 
+    await User.findByIdAndUpdate(friendRequestToDelete?.sender, {
+      $pull: { friendRequests: req.params.friendRequestId },
+    });
     await User.findByIdAndUpdate(friendRequestToDelete?.receiver, {
       $pull: { friendRequests: req.params.friendRequestId },
     });
