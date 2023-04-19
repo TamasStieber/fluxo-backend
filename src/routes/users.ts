@@ -77,6 +77,21 @@ router.get('/:id/posts', async (req, res, next) => {
   }
 });
 
+router.get('/:id/acquaintances', async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select('acquaintances')
+      .populate({
+        path: 'acquaintances',
+        select:
+          'firstName lastName userName email photosFolder profilePictureUrl createdAt',
+      });
+    res.status(200).json({ acquaintances: user?.acquaintances });
+  } catch {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.put('/', upload.single('profilePicture'), async (req, res, next) => {
   const updatedUser = JSON.parse(req.body.data) as Interfaces.User;
   const previousUser = await User.findById(req.userId);
