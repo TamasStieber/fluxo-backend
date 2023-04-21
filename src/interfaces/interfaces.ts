@@ -25,6 +25,8 @@ export interface User {
   posts: mongoose.Types.Array<mongoose.Types.ObjectId>;
   // likedPosts: mongoose.Types.ObjectId[] | Post[];
   likedPosts: mongoose.Types.Array<mongoose.Types.ObjectId>;
+  comments: mongoose.Types.Array<mongoose.Types.ObjectId>;
+  likedComments: mongoose.Types.Array<mongoose.Types.ObjectId>;
 }
 
 export interface Photo {
@@ -38,6 +40,7 @@ export interface Post {
   createdAt: Date;
   contentUpdated: Date;
   comments: mongoose.Types.ObjectId[];
+  commentsCount: number;
   likes: mongoose.Types.ObjectId[];
 }
 
@@ -67,4 +70,16 @@ export interface FriendRequest {
   receiver: mongoose.Types.ObjectId;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: Date;
+}
+
+export interface IComment {
+  _id: mongoose.Types.ObjectId;
+  post: mongoose.Types.ObjectId;
+  author: mongoose.Types.ObjectId;
+  content: String;
+  replies: mongoose.Types.ObjectId[];
+  repliesCount: number;
+  replyTo: mongoose.Types.ObjectId | null;
+  createdAt: mongoose.Types.ObjectId;
+  updatedAt: mongoose.Types.ObjectId;
 }

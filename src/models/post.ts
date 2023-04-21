@@ -24,6 +24,10 @@ const postSchema: mongoose.Schema<Post> = new mongoose.Schema(
         ref: 'Comment',
       },
     ],
+    commentsCount: {
+      type: Number,
+      default: 0,
+    },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,

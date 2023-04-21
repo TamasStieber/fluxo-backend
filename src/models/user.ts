@@ -63,6 +63,12 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
     likedPosts: [
       { type: mongoose.Schema.Types.ObjectId, ref: 'Post', default: [] },
     ],
+    comments: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: [] },
+    ],
+    likedComments: [
+      { type: mongoose.Schema.Types.ObjectId, ref: 'Comment', default: [] },
+    ],
   },
   { timestamps: true }
 );
