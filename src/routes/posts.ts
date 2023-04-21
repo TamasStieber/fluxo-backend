@@ -3,6 +3,7 @@ import * as Interfaces from '../interfaces/interfaces';
 import Post from '../models/post';
 import User from '../models/user';
 import mongoose from 'mongoose';
+import Comment from '../models/comment';
 
 const router = Router();
 
@@ -114,6 +115,9 @@ router.delete('/:id', async (req, res) => {
 
   try {
     const postToDelete = await Post.findByIdAndDelete(req.params.id);
+    postToDelete?.comments.forEach(async (comment) => {
+      await removeComments(comment);
+    });
     const author = await User.findById(postToDelete?.author);
     author?.posts.pull(req.params.id);
     author?.save();
@@ -122,5 +126,19 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+const removeComments = async (commentId: mongoose.Types.ObjectId) => {
+  try {
+    const comment = await Comment.findByIdAndDelete(commentId);
+    await User.findByIdAndUpdate(comment?.author, {
+      $pull: { comments: commentId },
+    });
+    comment?.replies.forEach(async (replyId) => {
+      await removeComments(replyId);
+    });
+  } catch (error) {
+    return error;
+  }
+};
 
 export default router;
