@@ -63,7 +63,7 @@ router.get('/:id/posts', async (req, res, next) => {
       .populate({
         path: 'author likes',
         select:
-          'firstName lastName userName email photosFolder profilePictureUrl',
+          'firstName lastName fullName userName email photosFolder profilePictureUrl',
       })
       .exec()
       .then((posts) => {

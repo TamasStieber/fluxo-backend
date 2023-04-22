@@ -4,8 +4,26 @@ import Post from '../models/post';
 import User from '../models/user';
 import mongoose from 'mongoose';
 import Comment from '../models/comment';
+import multer from 'multer';
+import fs from 'fs';
 
 const router = Router();
+
+const photosDir = './photos';
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './temp');
+  },
+  filename: function (req, file, cb) {
+    const extension = '.' + file.originalname.split('.').pop();
+    const uniqueSuffix =
+      Date.now() + '-' + Math.round(Math.random() * 1e9) + extension;
+    cb(null, 'fluxo' + '-' + uniqueSuffix);
+  },
+});
+
+const upload = multer({ storage: storage });
 
 router.get('/', async (req, res, next) => {
   try {
@@ -24,14 +42,38 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.post('/', async (req, res, next) => {
-  const newPost = req.body as Interfaces.Post;
-
+router.post('/', upload.array('file'), async (req, res, next) => {
   try {
+    const newPost = JSON.parse(req.body.data) as Interfaces.Post;
+
+    const files = req.files as Express.Multer.File[];
+    newPost.photos = files.map((file) => file.filename);
+
     const post = await Post.create(newPost);
-    await User.findByIdAndUpdate(req.userId, {
-      $push: { posts: post._id },
+
+    const author = await User.findById(req.userId);
+
+    if (author) {
+      author.posts.push(post._id);
+      author.photos.push(...newPost.photos);
+    }
+
+    await author?.save();
+
+    await post.populate({
+      path: 'author',
+      select:
+        'firstName lastName userName fullName photosFolder profilePictureUrl',
     });
+
+    const photosFolder = photosDir + '/' + author?.photosFolder;
+
+    files.forEach((file) =>
+      fs.renameSync(
+        './temp/' + file.filename,
+        photosFolder + '/' + file.filename
+      )
+    );
 
     res.status(201).json({ post });
   } catch {
@@ -109,18 +151,16 @@ router.delete('/:id', async (req, res) => {
         await user.save();
       }
     }
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
 
-  try {
     const postToDelete = await Post.findByIdAndDelete(req.params.id);
     postToDelete?.comments.forEach(async (comment) => {
       await removeComments(comment);
     });
+
     const author = await User.findById(postToDelete?.author);
     author?.posts.pull(req.params.id);
     author?.save();
+
     res.status(200).json({ postToDelete });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });

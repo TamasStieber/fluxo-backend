@@ -50,9 +50,10 @@ const userSchema: mongoose.Schema<User> = new mongoose.Schema(
         lastReadMessage: { type: mongoose.Schema.Types.ObjectId },
       },
     ],
-    photos: [
-      { type: mongoose.Schema.Types.ObjectId, ref: 'Photo', default: [] },
-    ],
+    // photos: [
+    //   { type: mongoose.Schema.Types.ObjectId, ref: 'Photo', default: [] },
+    // ],
+    photos: [{ type: String, default: [] }],
     createdAt: {
       type: Date,
     },

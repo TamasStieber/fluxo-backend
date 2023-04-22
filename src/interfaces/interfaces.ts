@@ -15,7 +15,8 @@ export interface User {
   email: string;
   password: string;
   photosFolder: string;
-  photos: Photo[];
+  // photos: Photo[];
+  photos: string[];
   createdAt: Date;
   profilePictureUrl: string;
   friendRequests: mongoose.Types.ObjectId[];
@@ -39,6 +40,7 @@ export interface Post {
   author: mongoose.Types.ObjectId;
   createdAt: Date;
   contentUpdated: Date;
+  photos: string[];
   comments: mongoose.Types.ObjectId[];
   commentsCount: number;
   likes: mongoose.Types.ObjectId[];

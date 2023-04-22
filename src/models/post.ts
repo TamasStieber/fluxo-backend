@@ -18,6 +18,7 @@ const postSchema: mongoose.Schema<Post> = new mongoose.Schema(
     contentUpdated: {
       type: Date,
     },
+    photos: [{ type: String, default: [] }],
     comments: [
       {
         type: mongoose.Schema.Types.ObjectId,
